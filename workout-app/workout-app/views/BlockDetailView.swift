@@ -87,17 +87,37 @@ struct SessionRowView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(session.title)
-                    .font(.headline)
-                Spacer()
-                Image(systemName: session.isCompleted ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(session.isCompleted ? .green : .secondary)
+                // Text(session.title)
+                //     .font(.headline)
+                // Spacer()
+                // Image(systemName: session.isCompleted ? "checkmark.circle.fill" : "circle")
+                //     .foregroundStyle(session.isCompleted ? .green : .secondary)
+                if session.entries.isEmpty {
+                    Text("No exercises logged")
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
+                } else {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(session.entries.sorted { $0.order < $1.order }) { entry in
+                            HStack(spacing: 6) {
+                                Text(entry.name)
+                                    .font(.headline)
+                                    .fontWeight(.medium)
+                                Text("\(entry.sets)×\(entry.reps) @ \(entry.weight, specifier: "%.0f")lbs")
+                                    .font(.headline)
+                                    .foregroundStyle(.secondary)
+                                if let rpe = entry.rpe {
+                                    Text("RPE \(rpe, specifier: "%.1f")")
+                                        .font(.headline)
+                                        .foregroundStyle(.blue)
+                                }
+                            }
+                        }
+                    }
+                }
             }
             Text(session.date, format: .dateTime.month().day())
                 .font(.caption)
-                .foregroundStyle(.secondary)
-            Text("\(session.entries.count) exercises")
-                .font(.caption2)
                 .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
