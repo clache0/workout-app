@@ -45,10 +45,13 @@ struct SessionDetailView: View {
     private func deleteEntry(offsets: IndexSet) {
         let sorted = session.entries.sorted(by: { $0.order < $1.order })
         for index in offsets {
+            let entry = sorted[index]
+            if let i = session.entries.firstIndex(of: entry) {
+                session.entries.remove(at: i)
+            }
             modelContext.delete(sorted[index])
         }
         try? modelContext.save()
-        // TODO: deleting entry does not update session? entry.order getter failed
     }
 }
 
