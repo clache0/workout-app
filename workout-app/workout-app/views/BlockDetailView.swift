@@ -7,18 +7,26 @@ struct BlockDetailView: View {
     @State private var showingEditName = false
     @State private var editedName = ""
 
+    var sortedWeeks: [Week] {
+        block.weeks.sorted { $0.weekNumber < $1.weekNumber }
+    }
+
+    func sortedSessions(for week: Week) -> [Session] {
+        week.sessions.sorted { $0.order < $1.order }
+    }
+
     var body: some View {
         List {
-            if block.weeks.isEmpty {
+            if sortedWeeks.isEmpty {
                 ContentUnavailableView(
                     "No Weeks",
                     systemImage: "calendar",
                     description: Text("This block has no weeks")
                 )
             } else {
-                ForEach(block.weeks) { week in
+                ForEach(sortedWeeks) { week in
                     Section(header: Text("Week \(week.weekNumber)")) {
-                        ForEach(week.sessions) { session in
+                        ForEach(sortedSessions(for: week)) { session in
                             NavigationLink(destination: SessionDetailView(session: session)) {
                                 SessionRowView(session: session)
                             }
@@ -54,7 +62,7 @@ struct BlockDetailView: View {
     }
 
     private func addSession(to week: Week) {
-        let session = Session(title: "Session \(week.sessions.count + 1)")
+        let session = Session(title: "Session \(week.sessions.count + 1)", order: week.sessions.count)
         modelContext.insert(session)
         week.sessions.append(session)
         try? modelContext.save()
@@ -62,9 +70,11 @@ struct BlockDetailView: View {
 
     private func deleteSession(from week: Week, offsets: IndexSet) {
         for index in offsets {
-            let session = week.sessions[index]   // 1. capture reference
-            week.sessions.remove(at: index)      // 2. remove from array
-            modelContext.delete(session)         // 3. delete from context
+            let session = week.sessions[index]
+            if let i = week.sessions.firstIndex(of: session) {
+                week.sessions.remove(at: index)
+            }
+            modelContext.delete(session)
         }
         try? modelContext.save()
     }
